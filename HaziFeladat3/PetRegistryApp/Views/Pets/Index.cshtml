@@ -1,0 +1,139 @@
+﻿@model IEnumerable<PetRegistryApp.Models.Pet>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1 class="header">Registered Pets</h1>
+
+<p>
+    <a class="button" asp-action="Create">Add Pet</a>
+</p>
+
+<div>
+    <form asp-action="Index" method="get">
+        <div>
+            <span>
+                <label>@Html.DisplayNameFor(model => model.CategoryID)</label>
+                <select name="CategoryIDFilter" asp-items="ViewBag.CategoryID ">
+                    <option value="Choose category"></option>
+                </select>
+            </span>
+            <span>
+                <label>@Html.DisplayNameFor(model => model.PetType)</label>
+                <select name="PetTypeFilter" asp-items="Html.GetEnumSelectList<PetType>()">
+                    <option value=""></option>
+                </select>
+            </span>
+            <span>
+                <label>@Html.DisplayNameFor(model => model.Name)</label>
+                <input name="NameFilter" class="control" />
+            </span>
+            <span>
+                <label>@Html.DisplayNameFor(model => model.Retired)</label>
+                <select name="RetiredFilter">
+                    <option value=""></option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
+            </span>
+            <span>
+                <input type="submit" value="Filter" class="btn btn-primary" />
+            </span>
+        </div>
+    </form>
+</div>
+
+
+<table class="l-table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+                <a asp-action="Index" asp-route-SortOrder="up">&#x25B2;</a>
+                <a asp-action="Index" asp-route-SortOrder="down">&#x25BC;</a>
+            </th>
+
+            <th>
+                @Html.DisplayNameFor(model => model.PetType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Retired)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ContractExp)
+            </th>
+
+            <th>
+                @Html.DisplayNameFor(model => model.Gender)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Age)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Weight)
+            </th>
+            <th>
+               @Html.DisplayNameFor(model => model.PhotoURL)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ReferencedCategory)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+
+
+            <td>
+                @Html.DisplayFor(modelItem => item.PetType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Retired)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ContractExp)
+            </td>
+
+
+            <td>
+                @Html.DisplayFor(modelItem => item.Gender)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Age)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Weight)
+            </td>
+            <!--
+            <td>
+                @Html.DisplayFor(modelItem => item.PhotoURL)
+            </td>
+            -->
+            <td>
+                @if (!string.IsNullOrEmpty(item.PhotoURL))
+                {
+                    <img src="@item.PhotoURL" alt="@item.Name" style="width:100px; height:auto;" />
+                }
+                else
+                {
+                    <p>No image</p>
+                }
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ReferencedCategory.CategoryName)
+            </td>
+            <td>
+                <a class="button" asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                <a class="button" asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                <a class="button" asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

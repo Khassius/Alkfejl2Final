@@ -1,0 +1,41 @@
+﻿@model IEnumerable<PetRegistryApp.Models.Category>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1 class="header">Categories</h1>
+
+<p>
+    <a class="button" asp-action="Create">Add Category</a>
+</p>
+<table class="l-table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CategoryName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CategoryDescription)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.CategoryName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CategoryDescription)
+            </td>
+            <td>
+                <a class="button" asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                <a class="button" asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                <a class="button" asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

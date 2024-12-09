@@ -1,0 +1,269 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DELETE BEHAVIOR ÁTÁLLÍTÁSA:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+- Context mappában az EFContex.cs-be beilleszteted ezt a kódot:
+      protected override void OnModelCreating(ModelBuilder modelBuilder)
+      {
+          modelBuilder.Entity<Pet>() // entitás a külső kulccsal
+          .HasOne(p => p.ReferencedCategory) // hivatkozzuk a másik entitást
+          .WithMany() // jelezzük, hogy ez 1:N kapcsolat
+          .HasForeignKey(p => p.CategoryID) // megadjuk a külső kulcsot
+          .OnDelete(DeleteBehavior.Restrict);
+      }
+- Adatbázis frissítése:
+  - Tools → NuGet Package Manager → Package Manager Console
+  - Add-Migration MigrationName
+  - Update-Database
+      - egyéb műveletek:
+        Update-Database PreviousMigrationName
+        Get-Migration
+        Remove-Migration → eltávolítja a legutolsó létrehozott migrációt a projektből,anélkül hogy az adatbázist érintené (Update-Database kiadása előtt!)
+
+- Controller mappában a CategoriesController-ben erre átírod a DeleteConfirmed függvényt:
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+    	try
+    	{
+    		var category = await _context.Categories.FindAsync(id);
+    		if (category != null)
+    		{
+    			_context.Categories.Remove(category);
+    		}
+    
+    		await _context.SaveChangesAsync();
+    		return RedirectToAction(nameof(Index));
+    	}
+    	catch (Exception ex)
+    	{
+    		ViewData["DeleteEx"] = "There are pets in this category! Unable to delete.";
+    		return View("Error");
+    	}
+    
+    }
+
+- A Views mappában lévő Shared mappában található Error.cshtml-ben beilleszted ezt az error-t:
+    <h3>@ViewData["DeleteEx"]</h3>
+    Az alatta lévő dolgokat törlöd!
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!ÚJ PROPERTY HOZZÁADÁSA EGY MODELLHEZ:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    -A Models mappában a Pet modellben hozzáadod a kívánt propertyt:
+        - A class-on kívül létrehozunk enum propertyt, így csak adott értéket vehet fel:
+            public enum PetType
+            {
+            	Funny,
+            	Angry,
+            	Sus,
+            	Sad
+            }
+        -A class-on belül:
+            [Required]
+            public PetType PetType { get; set; }
+            
+            [Required]
+            public bool Retired { get; set; }
+            
+            [Required]
+            [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
+            public DateTime ContractExp { get; set; }
+        -Package Managerben:
+            Add-Migration MigrationName
+            Update-Database
+
+    - PetsController-ben hozzáadod a create és edit-nél az új property-ket:
+        public async Task<IActionResult> Create([Bind("ID,Name,PetType,Retired,ContractExp,Gender,Age,Weight,PhotoURL,CategoryID")] Pet pet)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Name,PetType,Retired,ContractExp,Gender,Age,Weight,PhotoURL,CategoryID")] Pet pet)
+
+    - A Views mappában a Pets mappában található Create.cshtml-ben hozzádadod ezt a kódot:
+        <div class="form-group">
+            <label asp-for="PetType" class="control-label"></label>
+            <select asp-for="PetType" asp-items="Html.GetEnumSelectList<PetType>()" class="form-control"></select>
+            <span asp-validation-for="PetType" class="text-danger"></span>
+        </div>
+        <div class="form-group form-check">
+            <label class="form-check-label">
+                <input class="form-check-input" asp-for="Retired" /> @Html.DisplayNameFor(model => model.Retired)
+            </label>
+        </div>
+        <div class="form-group">
+            <label asp-for="ContractExp" class="control-label"></label>
+            <input asp-for="ContractExp" class="form-control" />
+            <span asp-validation-for="ContractExp" class="text-danger"></span>
+        </div>
+
+    - A Views mappában a Pets mappában található Delete.cshtml-ben hozzádadod ezt a kódot:
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.PetType)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.PetType)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Retired)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Retired)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ContractExp)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ContractExp)
+        </dd>
+
+    - A Views mappában a Pets mappában található Details.cshtml-ben hozzádadod ezt a kódot:
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.PetType)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.PetType)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Retired)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Retired)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ContractExp)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ContractExp)
+        </dd>
+        
+    - A Views mappában a Pets mappában található Edit.cshtml-ben hozzádadod ezt a kódot:
+        <div class="form-group">
+            <label asp-for="PetType" class="control-label"></label>
+            <select asp-for="PetType" asp-items="Html.GetEnumSelectList<PetType>()" class="form-control"></select>
+            <span asp-validation-for="PetType" class="text-danger"></span>
+        </div>
+        <div class="form-group form-check">
+            <label class="form-check-label">
+                <input class="form-check-input" asp-for="Retired" /> @Html.DisplayNameFor(model => model.Retired)
+            </label>
+        </div>
+        <div class="form-group">
+            <label asp-for="ContractExp" class="control-label"></label>
+            <input asp-for="ContractExp" class="form-control" />
+            <span asp-validation-for="ContractExp" class="text-danger"></span>
+        </div>
+        
+    - A Views mappában a Pets mappában található Index.cshtml-ben hozzádadod ezt a kódot:
+        <table class="l-table"> -be
+        
+            <th>
+                @Html.DisplayNameFor(model => model.PetType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Retired)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ContractExp)
+            </th>
+
+        @foreach (var item in Model) -be
+            
+            <td>
+                @Html.DisplayFor(modelItem => item.PetType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Retired)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ContractExp)
+            </td>
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!KERESÉS MEGVALÓSÍTÁSA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    - A Views mappában a Pets mappában található Index.cshtml-ben hozzádadod ezt a kódot:
+          <div>
+            <form asp-action="Index" method="get">
+                <div>
+                    <span>
+                        <label>@Html.DisplayNameFor(model => model.CategoryID)</label>
+                        <select name="CategoryIDFilter" asp-items="ViewBag.CategoryID ">
+                            <option value="Choose category"></option>
+                        </select>
+                    </span>
+                    <span>
+                        <label>@Html.DisplayNameFor(model => model.PetType)</label>
+                        <select name="PetTypeFilter" asp-items="Html.GetEnumSelectList<PetType>()">
+                            <option value=""></option>
+                        </select>
+                    </span>
+                    <span>
+                        <label>@Html.DisplayNameFor(model => model.Name)</label>
+                        <input name="NameFilter" class="control" />
+                    </span>
+                    <span>
+                        <label>@Html.DisplayNameFor(model => model.Retired)</label>
+                        <select name="RetiredFilter">
+                            <option value=""></option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </span>
+                    <span>
+                        <input type="submit" value="Filter" class="btn btn-primary" />
+                    </span>
+                </div>
+            </form>
+        </div>
+
+        -- <table class="l-table"> -ben
+             <th>
+                 @Html.DisplayNameFor(model => model.Name)
+                 <a asp-action="Index" asp-route-SortOrder="up">&#x25B2;</a>
+                 <a asp-action="Index" asp-route-SortOrder="down">&#x25BC;</a>
+             </th>
+
+    - A PetsController-ben az index függvénty átírom erre:
+        public async Task<IActionResult> Index(string? SortOrder, int? CategoryIDFilter, PetType? PetTypeFilter,
+        										string? NameFilter, bool? RetiredFilter)
+        {
+        	var efContext = _context.Pets.Include(p => p.ReferencedCategory);
+        	var res = efContext.AsQueryable();
+        
+        	//Console.WriteLine(SortOrder + " " + CategoryIDFilter + " " + NameFilter + " " + RetiredFilter);
+        
+        	if (SortOrder != null && SortOrder.Equals("up"))
+        	{
+        		res = res.OrderByDescending(e => e.Name);
+        	}
+        	if (SortOrder != null && SortOrder.Equals("down"))
+        	{
+        		res = res.OrderBy(e => e.Name);
+        	}
+        	if (CategoryIDFilter != null)
+        	{
+        		Console.WriteLine("category read");
+        		res = res.Where(e => e.CategoryID.Equals(CategoryIDFilter));
+        	}
+        	if (PetTypeFilter != null)
+        	{
+        		res = res.Where(e => e.PetType.Equals(PetTypeFilter));
+        	}
+        	if (NameFilter != null)
+        	{
+        		res = res.Where(e => e.Name.ToLower().Contains(NameFilter.ToLower()));
+        	}
+        	if (RetiredFilter != null)
+        	{
+        		res = res.Where(e => e.Retired == RetiredFilter);
+        	}
+        	ViewData["CategoryID"] = new SelectList(_context.Categories, "ID", "CategoryName");
+        	return View(await res.ToListAsync());
+        }
+
+
+
+
+
+
+        
